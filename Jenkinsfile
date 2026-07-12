@@ -61,6 +61,18 @@ pipeline {
 
         }
 
+        stage('Verificar Reporte') {
+
+    steps {
+
+        bat 'dir'
+
+        bat 'dir test-results'
+
+    }
+
+}
+
         stage('JUnit Report') {
 
     steps {
