@@ -63,39 +63,33 @@ pipeline {
 
 
 
-        stage('Generate Commit SHA Tag') {
-
-    steps {
-
-        script {
-
-            def commit = bat(
-                script: '@git rev-parse --short HEAD',
-                returnStdout: true
-            ).trim()
-
-            env.COMMIT_TAG = "${REGISTRY}/${IMAGE_NAME}:${commit}"
-
-            echo "Tag generado: ${env.COMMIT_TAG}"
-
-        }
-
-    }
-
-}
-
-
-
-        stage('Build Docker Image') {
+        stage('Generate Tags') {
 
             steps {
 
-                echo 'Construyendo imagen Docker...'
+                script {
 
 
-                bat "docker build -t ${IMAGE_TAG} ."
+                    def commit = bat(
+                        script: '@git rev-parse --short HEAD',
+                        returnStdout: true
+                    ).trim()
 
-                bat "docker tag ${IMAGE_TAG} ${COMMIT_TAG}"
+
+                    def timestamp = new Date().format("yyyyMMdd-HHmm")
+
+
+                    env.COMMIT_TAG = "${REGISTRY}/${IMAGE_NAME}:${commit}"
+
+                    env.TIMESTAMP_TAG = "${REGISTRY}/${IMAGE_NAME}:${timestamp}"
+
+
+                    echo "Tag Commit SHA: ${env.COMMIT_TAG}"
+
+                    echo "Tag Timestamp: ${env.TIMESTAMP_TAG}"
+
+
+                }
 
             }
 
@@ -103,16 +97,46 @@ pipeline {
 
 
 
-        stage('Push Image') {
+
+        stage('Build Docker Image') {
 
             steps {
+
+
+                echo 'Construyendo imagen Docker...'
+
+
+                bat "docker build -t ${IMAGE_TAG} ."
+
+
+                bat "docker tag ${IMAGE_TAG} ${COMMIT_TAG}"
+
+
+                bat "docker tag ${IMAGE_TAG} ${TIMESTAMP_TAG}"
+
+
+            }
+
+        }
+
+
+
+
+        stage('Push Image') {
+
+
+            steps {
+
 
                 echo 'Publicando imagen en GitHub Container Registry...'
 
 
                 withCredentials([
+
                     string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')
+
                 ]) {
+
 
 
                     bat """
@@ -125,6 +149,10 @@ pipeline {
 
                     docker push ${COMMIT_TAG}
 
+
+                    docker push ${TIMESTAMP_TAG}
+
+
                     """
 
                 }
@@ -135,14 +163,18 @@ pipeline {
 
 
 
+
         stage('Verify') {
 
+
             steps {
+
 
                 echo 'Imagen generada correctamente'
 
 
                 bat "docker images"
+
 
             }
 
@@ -153,7 +185,9 @@ pipeline {
 
 
 
+
     post {
+
 
 
         success {
@@ -162,9 +196,11 @@ pipeline {
             echo 'Pipeline completado exitosamente'
 
 
+
             emailext(
 
                 subject: "Pipeline exitoso: ${JOB_NAME} #${BUILD_NUMBER}",
+
 
                 body: """
 
@@ -186,22 +222,35 @@ pipeline {
                 SUCCESS
 
 
+
                 Imagen latest:
 
                 ${IMAGE_TAG}
+
 
 
                 Imagen Commit SHA:
 
                 ${COMMIT_TAG}
 
+
+
+                Imagen Build Timestamp:
+
+                ${TIMESTAMP_TAG}
+
+
                 """,
 
+
                 to: 'tachito00king@gmail.com'
+
 
             )
 
         }
+
+
 
 
 
@@ -211,13 +260,17 @@ pipeline {
             echo 'El pipeline fallo'
 
 
+
             emailext(
 
                 subject: "Pipeline fallido: ${JOB_NAME} #${BUILD_NUMBER}",
 
+
+
                 body: """
 
                 El pipeline presentó errores.
+
 
 
                 Proyecto:
@@ -225,9 +278,11 @@ pipeline {
                 ${JOB_NAME}
 
 
+
                 Build:
 
                 ${BUILD_NUMBER}
+
 
 
                 Estado:
@@ -235,15 +290,22 @@ pipeline {
                 FAILURE
 
 
+
                 Revisar consola de Jenkins para más detalles.
+
 
                 """,
 
+
+
                 to: 'tachito00king@gmail.com'
+
 
             )
 
+
         }
+
 
 
 
@@ -258,6 +320,8 @@ pipeline {
 
         }
 
+
     }
+
 
 }
