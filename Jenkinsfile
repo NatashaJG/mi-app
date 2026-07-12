@@ -65,24 +65,24 @@ pipeline {
 
         stage('Generate Commit SHA Tag') {
 
-            steps {
+    steps {
 
-                script {
+        script {
 
-                    def commit = bat(
-                        script: 'git rev-parse --short HEAD',
-                        returnStdout: true
-                    ).trim()
+            def commit = bat(
+                script: '@git rev-parse --short HEAD',
+                returnStdout: true
+            ).trim()
 
-                    env.COMMIT_TAG = "${REGISTRY}/${IMAGE_NAME}:${commit}"
+            env.COMMIT_TAG = "${REGISTRY}/${IMAGE_NAME}:${commit}"
 
-                    echo "Tag generado: ${env.COMMIT_TAG}"
-
-                }
-
-            }
+            echo "Tag generado: ${env.COMMIT_TAG}"
 
         }
+
+    }
+
+}
 
 
 
