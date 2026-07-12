@@ -2,6 +2,7 @@ pipeline {
 
     agent any
 
+
     environment {
 
         REGISTRY = 'ghcr.io'
@@ -29,6 +30,7 @@ pipeline {
                 bat 'npm --version'
 
             }
+
         }
 
 
@@ -42,6 +44,7 @@ pipeline {
                 bat 'npm install'
 
             }
+
         }
 
 
@@ -60,13 +63,39 @@ pipeline {
 
 
 
+        stage('Generate Commit SHA Tag') {
+
+            steps {
+
+                script {
+
+                    def commit = bat(
+                        script: 'git rev-parse --short HEAD',
+                        returnStdout: true
+                    ).trim()
+
+                    env.COMMIT_TAG = "${REGISTRY}/${IMAGE_NAME}:${commit}"
+
+                    echo "Tag generado: ${env.COMMIT_TAG}"
+
+                }
+
+            }
+
+        }
+
+
+
         stage('Build Docker Image') {
 
             steps {
 
                 echo 'Construyendo imagen Docker...'
 
+
                 bat "docker build -t ${IMAGE_TAG} ."
+
+                bat "docker tag ${IMAGE_TAG} ${COMMIT_TAG}"
 
             }
 
@@ -90,7 +119,11 @@ pipeline {
 
                     echo %GITHUB_TOKEN% | docker login ghcr.io -u NatashaJG --password-stdin
 
+
                     docker push ${IMAGE_TAG}
+
+
+                    docker push ${COMMIT_TAG}
 
                     """
 
@@ -108,6 +141,7 @@ pipeline {
 
                 echo 'Imagen generada correctamente'
 
+
                 bat "docker images"
 
             }
@@ -121,67 +155,109 @@ pipeline {
 
     post {
 
-    success {
 
-        echo 'Pipeline completado exitosamente'
+        success {
 
-        emailext(
-            subject: "Pipeline exitoso: ${JOB_NAME} #${BUILD_NUMBER}",
-            body: """
-            El pipeline se ejecutó correctamente.
 
-            Proyecto:
-            ${JOB_NAME}
+            echo 'Pipeline completado exitosamente'
 
-            Build:
-            ${BUILD_NUMBER}
 
-            Estado:
-            SUCCESS
+            emailext(
 
-            Imagen generada:
-            ${IMAGE_TAG}
-            """,
-            to: 'tachito00king@gmail.com'
-        )
+                subject: "Pipeline exitoso: ${JOB_NAME} #${BUILD_NUMBER}",
+
+                body: """
+
+                El pipeline se ejecutó correctamente.
+
+
+                Proyecto:
+
+                ${JOB_NAME}
+
+
+                Build:
+
+                ${BUILD_NUMBER}
+
+
+                Estado:
+
+                SUCCESS
+
+
+                Imagen latest:
+
+                ${IMAGE_TAG}
+
+
+                Imagen Commit SHA:
+
+                ${COMMIT_TAG}
+
+                """,
+
+                to: 'tachito00king@gmail.com'
+
+            )
+
+        }
+
+
+
+        failure {
+
+
+            echo 'El pipeline fallo'
+
+
+            emailext(
+
+                subject: "Pipeline fallido: ${JOB_NAME} #${BUILD_NUMBER}",
+
+                body: """
+
+                El pipeline presentó errores.
+
+
+                Proyecto:
+
+                ${JOB_NAME}
+
+
+                Build:
+
+                ${BUILD_NUMBER}
+
+
+                Estado:
+
+                FAILURE
+
+
+                Revisar consola de Jenkins para más detalles.
+
+                """,
+
+                to: 'tachito00king@gmail.com'
+
+            )
+
+        }
+
+
+
+        cleanup {
+
+
+            echo 'Limpiando recursos Docker'
+
+
+            bat 'docker image prune -f'
+
+
+        }
 
     }
-
-
-    failure {
-
-        echo 'El pipeline fallo'
-
-        emailext(
-            subject: "Pipeline fallido: ${JOB_NAME} #${BUILD_NUMBER}",
-            body: """
-            El pipeline presentó errores.
-
-            Proyecto:
-            ${JOB_NAME}
-
-            Build:
-            ${BUILD_NUMBER}
-
-            Estado:
-            FAILURE
-
-            Revisar consola de Jenkins para más detalles.
-            """,
-            to: 'tachito00king@gmail.com'
-        )
-
-    }
-
-
-    cleanup {
-
-        echo 'Limpiando recursos Docker'
-
-        bat 'docker image prune -f'
-
-    }
-
-}
 
 }
