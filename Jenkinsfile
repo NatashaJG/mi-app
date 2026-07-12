@@ -4,13 +4,13 @@ pipeline {
 
     environment {
 
-    REGISTRY = 'ghcr.io'
+        REGISTRY = 'ghcr.io'
 
-    IMAGE_NAME = 'natashajg/mi-app'
+        IMAGE_NAME = 'natashajg/mi-app'
 
-    IMAGE_TAG = "${REGISTRY}/${IMAGE_NAME}:latest"
+        IMAGE_TAG = "${REGISTRY}/${IMAGE_NAME}:latest"
 
-}
+    }
 
 
     stages {
@@ -74,37 +74,16 @@ pipeline {
 
 
 
-    stage('Push Image') {
-
-        steps {
-
-        echo 'Publicando imagen en GitHub Container Registry...'
-
-            withCredentials([
-            string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')
-            ]) {
-
-                bat """
-
-                echo %GITHUB_TOKEN% | docker login ghcr.io -u NatashaJG --password-stdin
-
-                docker push ${IMAGE_TAG}
-
-                """
-
-            }
-
-        }
-
-    }
-
+        stage('Push Image') {
 
             steps {
 
-                echo 'Publicando imagen Docker...'
+                echo 'Publicando imagen en GitHub Container Registry...'
 
 
-                withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                withCredentials([
+                    string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')
+                ]) {
 
 
                     bat """
@@ -134,6 +113,7 @@ pipeline {
             }
 
         }
+
 
     }
 
