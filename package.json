@@ -7,5 +7,7 @@
     "start": "node src/index.js",
     "test": "node tests/test.js"
   },
-  "dependencies": {}
+  "devDependencies": {
+    "junit-report-builder": "^5.1.2"
+  }
 }
