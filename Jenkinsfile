@@ -74,13 +74,29 @@ pipeline {
 
 
 
-        stage('Push Image') {
+    stage('Push Image') {
 
-            when {
+        steps {
 
-                branch 'main'
+        echo 'Publicando imagen en GitHub Container Registry...'
+
+            withCredentials([
+            string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')
+            ]) {
+
+                bat """
+
+                echo %GITHUB_TOKEN% | docker login ghcr.io -u NatashaJG --password-stdin
+
+                docker push ${IMAGE_TAG}
+
+                """
 
             }
+
+        }
+
+    }
 
 
             steps {
