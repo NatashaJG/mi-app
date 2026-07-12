@@ -61,6 +61,15 @@ pipeline {
 
         }
 
+        stage('JUnit Report') {
+
+    steps {
+
+        junit 'test-results/results.xml'
+
+    }
+
+}
 
 
         stage('Generate Tags') {
