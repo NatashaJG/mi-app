@@ -121,31 +121,67 @@ pipeline {
 
     post {
 
+    success {
 
-        success {
+        echo 'Pipeline completado exitosamente'
 
-            echo 'Pipeline completado exitosamente'
+        emailext(
+            subject: "Pipeline exitoso: ${JOB_NAME} #${BUILD_NUMBER}",
+            body: """
+            El pipeline se ejecutó correctamente.
 
-        }
+            Proyecto:
+            ${JOB_NAME}
 
+            Build:
+            ${BUILD_NUMBER}
 
+            Estado:
+            SUCCESS
 
-        failure {
-
-            echo 'El pipeline fallo'
-
-        }
-
-
-
-        cleanup {
-
-            echo 'Limpiando recursos Docker'
-
-            bat 'docker image prune -f'
-
-        }
+            Imagen generada:
+            ${IMAGE_TAG}
+            """,
+            to: 'tachito00king@gmail.com'
+        )
 
     }
+
+
+    failure {
+
+        echo 'El pipeline fallo'
+
+        emailext(
+            subject: "Pipeline fallido: ${JOB_NAME} #${BUILD_NUMBER}",
+            body: """
+            El pipeline presentó errores.
+
+            Proyecto:
+            ${JOB_NAME}
+
+            Build:
+            ${BUILD_NUMBER}
+
+            Estado:
+            FAILURE
+
+            Revisar consola de Jenkins para más detalles.
+            """,
+            to: 'tachito00king@gmail.com'
+        )
+
+    }
+
+
+    cleanup {
+
+        echo 'Limpiando recursos Docker'
+
+        bat 'docker image prune -f'
+
+    }
+
+}
 
 }
