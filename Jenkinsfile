@@ -4,12 +4,13 @@ pipeline {
 
     environment {
 
-        REGISTRY = 'ghcr.io'
+    REGISTRY = 'ghcr.io'
 
-        IMAGE_NAME = 'NatashaJG/mi-app'
+    IMAGE_NAME = 'natashajg/mi-app'
 
-        IMAGE_TAG = "${REGISTRY}/${IMAGE_NAME}:latest"
-    }
+    IMAGE_TAG = "${REGISTRY}/${IMAGE_NAME}:latest"
+
+}
 
 
     stages {
